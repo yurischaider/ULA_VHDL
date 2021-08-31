@@ -1,0 +1,58 @@
+entity testbench_ula is end; 
+
+
+library IEEE;														-- biblioteca utilizada
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.STD_LOGIC_unsigned.all;
+
+
+architecture tb_ula of testbench_ula is 
+
+component ula 
+	port(
+			seletor : in STD_LOGIC_VECTOR (2 downto 0);	-- valores para seleo 
+			x : in STD_LOGIC_VECTOR (3 downto 0);			-- entrada 4 bits
+			y : in STD_LOGIC_VECTOR (3 downto 0);			-- entrada 4 bits
+			nf : out STD_LOGIC;							-- declara flag valor negativo
+			zf : out STD_LOGIC;							-- declara flag sada zero
+			cf : out STD_LOGIC;							-- declara flag carry out
+			ovf : out STD_LOGIC;							-- declara flag overflow
+			output : out STD_LOGIC_VECTOR (3 downto 0)			-- saida 4 bits
+			);
+end component;
+
+
+	-- valores para seleo 
+signal seletor_t : STD_LOGIC_VECTOR (2 downto 0);
+signal x_t : STD_LOGIC_VECTOR (3 downto 0);			-- entrada 4 bits
+signal y_t : STD_LOGIC_VECTOR (3 downto 0);			-- entrada 4 bits
+
+
+
+begin 
+
+ula1: ula port map( seletor => seletor_t , x => x_t, y => y_t , nf => open , zf => open , cf => open , ovf =>open ,output => open);
+
+
+estimulo: process
+begin 
+
+wait for 5 ns; seletor_t <= "000"; x_t<= "0000"; y_t <= "0000";
+for I in 0 to 7 loop
+	wait for 1 ns;
+	for U in 0 to 15 loop
+		for W in 0 to 15 loop
+		y_t <= y_t + "0001";
+		wait for 1 ns;
+		end loop;
+	x_t <= x_t + "0001";
+	wait for 1 ns;
+	end loop;
+seletor_t <= seletor_t + "001";
+wait for 1 ns;
+end loop;	
+
+	
+end process estimulo; 
+
+end tb_ula;

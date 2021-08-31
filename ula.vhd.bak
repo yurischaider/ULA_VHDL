@@ -1,0 +1,92 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.STD_LOGIC_unsigned.all;
+
+entity ula is
+	port(
+			seletor	:	in	STD_LOGIC_VECTOR (2 downto 0);		-- Seletor de operao
+			x			:	in	STD_LOGIC_VECTOR (3 downto 0);		-- Entrada x de 4 bits
+			y			:	in	STD_LOGIC_VECTOR (3 downto 0);		-- Entrada y de 4 bits
+			nf			:	out STD_LOGIC;					-- Flag valor negativo
+			zf			:	out STD_LOGIC;					-- Flag sada zero
+			cf			:	out STD_LOGIC;					-- Flag Carry out
+			ovf		:	out STD_LOGIC;						-- Flag Overflow
+			output	:	out STD_LOGIC_VECTOR (3 downto 0)
+			);
+end ula;
+
+architecture hardware of ula is
+begin
+process(x,y,seletor)
+
+variable var: STD_LOGIC_VECTOR (4 downto 0);			-- Variavel para receber a operao
+variable outputv: STD_LOGIC_VECTOR (3 downto 0);		-- variavel temporaria de saida
+variable cfv, zfv: STD_LOGIC;					-- variavel temporaria das flags de carry e zero
+
+begin
+	cf <= '0';
+	ovf <= '0';
+	var := "00000";
+	zfv := '0';
+	
+	case seletor is
+	
+		when "000" =>							-- Operao soma A + B
+			var := ('0' & x) + ('0' & y);
+			outputv := var(3 downto 0);
+			cfv := var(4);
+			ovf <= outputv(3) xor x(3) xor y(3) xor cfv;
+			cf <= cfv;
+			
+		when "001" =>							-- Operao subtrao A - B com complemento de 2
+			var := ('0' & x) + (not('0' & y) + "00001");
+			outputv := var(3 downto 0);
+			cfv := var(4);
+			ovf <= outputv(3) xor x(3) xor y(3) xor cfv;
+			cf <= cfv;
+			
+		when "010" =>							-- Operao subtrao B - A com complemento de 2
+			var := ('0' & y) + (not('0' & x) + "00001");
+			outputv := var(3 downto 0);
+			cfv := var(4);
+			ovf <= outputv(3) xor x(3) xor y(3) xor cfv;
+			cf <= cfv;
+			
+		when "011" =>							-- Operao incremento +1
+			var := ('0' & x) + "00001";
+			outputv := var(3 downto 0);
+			cfv := var(4);
+			ovf <= outputv(3) xor x(3) xor cfv;
+			cf <= cfv;
+			
+		when "100" =>							-- Operao Complemento de 2
+			var := not('0' & x) + "0001";
+			outputv := var(3 downto 0);
+			cfv := var(4);
+			ovf <= outputv(3) xor x(3) xor cfv;
+			cf <= cfv;
+			
+		when "101" =>							-- Operao AND
+			outputv := x and y;
+			
+		when "110" =>							-- Operao OR
+			outputv := x or y;
+			
+		when "111" =>							-- Operao XOR
+			outputv := x xor y;
+			
+		when others =>
+			outputv := x;
+			
+	end case;
+	for i in 0 to 3 loop
+		zfv := zfv or outputv(i);					-- zfv ser 0 se o outputv(i) for 0
+	end loop;
+	output <= outputv;
+	zf <= not zfv;
+	if (x=y and (seletor = "001" or seletor = "010")) then
+		nf <= '0';
+	else nf <= outputv(3);
+	end if;
+end process;
+end hardware;
